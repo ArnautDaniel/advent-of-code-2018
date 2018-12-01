@@ -25,3 +25,6 @@
   (mapcar #'(lambda (x) (if (string= "" x)
 			    0
 			    (parse-integer x))) data))
+
+;;;Incredibly slow solution,  should be using a hash table at least.  After a few passes 'member' would have to search
+;;;the length of data at the very least.
