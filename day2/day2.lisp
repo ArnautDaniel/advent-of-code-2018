@@ -6,11 +6,11 @@
 
 (defun answer (data)
   (mapcar #'(lambda (x) (let ((lst x)
-			   (fuck (loop for char across x
+			   (vuck (loop for char across x
         collect char)))
 			  (remove-if #'(lambda (z) (< z 2))
 				     (mapcar #'(lambda (y) (count y x))
-					     fuck))))
+					     vuck))))
        data))
 		       
 
