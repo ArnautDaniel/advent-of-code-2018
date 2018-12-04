@@ -1,0 +1,50 @@
+(defun range (min max &optional (step 1))
+  (when (<= min max)
+    (cons min (range (+ min step) max step))))
+
+(defun get-file (filename)
+  (with-open-file (stream filename)
+    (loop for line = (read-line stream nil)
+       while line
+       collect line)))
+
+(defun parse-data (data)
+  (mapcar #'(lambda (x)
+	      (mapcar #'parse-integer (split-sequence:split-sequence #\, x)))
+	  data))
+
+(defun data (file)
+  (parse-data (get-file file)))
+
+(defun into-rectangle (coor)
+  (let ((rl (+ (car coor) (third coor)))
+	(bl (+ (second coor) (fourth coor))))
+    (list (list (first coor) rl)
+	   (list (second coor) bl))))
+
+(defun within-rects (coor coor0)
+  (let ((base (alexandria:iota (second (car coor))
+			       :start (first (car coor))))
+    (dest (alexandria:iota (second (car coor0))
+			   :start (first (car coor0))))
+	(base0 (alexandria:iota (second (second coor))
+				:start (first (second coor))))
+	(dest0 (alexandria:iota (second (second coor0))
+				:start (first (second coor)))))
+    
+    (if (and (intersection dest dest0)
+	     (intersection base base0))
+	t
+	'f)))
+
+(defun answer (data)
+  (let ((res 0)
+	(conv (mapcar #'into-rectangle data)))
+    (mapcar #'(lambda (y)
+		(mapcar #'(lambda (x)
+			    (when
+				(within-rects x y)
+			      (incf res)))
+			(remove y conv)))
+			conv)
+    res))
