@@ -1,0 +1,44 @@
+
+(defun get-file (filename)
+  (with-open-file (stream filename)
+    (loop for line = (read-line stream nil)
+       while line
+       collect line)))
+
+(defun parse-data (data)
+  (mapcar #'(lambda (x)
+	      (mapcar #'parse-integer (split-sequence:split-sequence #\, x)))
+	  data))
+
+(defun data (file)
+  (parse-data (get-file file)))
+
+(defun month (timestr)
+  (subseq timestr 6 8))
+
+(defun day (timestr)
+  (subseq timestr 9 11))
+
+(defun year (timestr)
+  (subseq timestr 1 5))
+
+(defun hour (timestr)
+  (subseq timestr 12 14))
+
+(defun minute (timestr)
+  (subseq timestr 15 17))
+
+(defun sort-data (data func)
+  (let ((vals '()))
+    (mapc #'(lambda (x) (unless (member (funcall func x) vals)
+			  (push (funcall func x) vals)))
+	  data)
+    (mapcar #'(lambda (x)
+		(remove-if-not #'(lambda (y) (= (funcall func y) x))
+			       data))
+	    vals)))
+      
+(defparameter *data* (get-file "input"))
+
+
+		     
