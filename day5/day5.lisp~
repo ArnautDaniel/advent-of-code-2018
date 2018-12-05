@@ -1,0 +1,11 @@
+(defun get-file (filename)
+  (with-open-file (stream filename)
+    (loop for line = (read-line stream nil)
+       while line
+       collect line)))
+
+(defun parse-data (data)
+  (split-sequence:split-sequence #\ data))
+
+(defun answer (data)
+  (
