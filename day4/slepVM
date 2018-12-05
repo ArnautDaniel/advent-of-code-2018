@@ -1,0 +1,87 @@
+registers:
+
+    gua fal wak ret hig cpr lim
+    rdr
+opcodes:
+
+    sga sfa swa ret
+    add sum hig cpg
+    cpe cpl low hgn
+    phr mic pdm
+
+sga     -- set guard
+sga id  -- sets the value of gua to id
+
+~~~
+sfa     -- set falls
+sfa val -- sets the value of falls to val
+
+~~~
+swa     -- set wak
+swa val -- sets the value of wak to val
+
+~~~
+ret     -- returns
+ret     -- prints the value of the ret register
+
+~~~
+add     -- add
+add n   -- adds 1 to byte n,  uses register gua to
+        -- determine which column
+~~~
+sum     -- sum
+sum id  -- sums the values of bytes 1-61 based on
+        -- id.  places value in ret
+~~~
+hig     -- high
+hig     -- returns the highest sum in memory
+        -- gua value is the id of highest sum
+
+~~~
+cpg     -- compare-greater
+cpg     -- compares the value of ret and hig
+        -- places the higher value in hig
+
+~~~
+cpe     -- compare-equal
+cpe     -- compares the value of ret and hig
+        -- if equal, increments fal
+
+~~~
+cpl     -- compare-lesser
+cpl     -- compares the value of ret and hig
+        -- places the lower value in hig
+        -- if hig is lower than gua remains the same
+        -- else place ret in hig and cpr in gua
+
+~~~
+low     -- low
+low     -- returns the lowest sum in memory
+
+~~~
+hgn     -- highest guard number
+hgn id  -- places the highest individual byte from guard
+        -- into hig
+
+~~~
+lgn     -- lowest guard number
+lgn id  -- places the lowest individual byte from guard
+        -- into hig
+
+~~~
+phr     -- place hig into ret
+phr     -- places hig into ret
+
+~~~
+mic     -- mass increment
+mic     -- adds 1 to row gua from fal to wak
+
+memory:
+
+    n-columns -- n is stored in lim
+    61 byte rows (0 byte stores guard id)
+    n-bytes for instruction code
+
+
+
+
