@@ -1,11 +1,18 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include<stdio.h>
+#include<stdlib.h>
+#include<fts.h>
+#include<string.h>
+#include<sys/stat.h>
+#include <sys/wait.h>
+#include <errno.h>
+#include <unistd.h>
+#include <time.h>
 #define LIM_MIN 64 
 #define MINUTES 61
 
 enum opcodes {op_sga, op_sfa, op_swa, op_ret, op_add, op_sum
 	      , op_hig, op_cpg, op_cpe, op_cpl, op_low, op_hgn
-	      , op_phr, op_mic, op_pdm};
+	      , op_phr, op_mic, op_pdm, op_pcm};
   
 void print_usage (){
   printf("usage: slepz *input.zz*\n");
@@ -19,6 +26,10 @@ void sga (int* gua, int id){
 
 int guard_contained_in_ram(int** ram, int gua, int lim){
   for (int i = 0; i < lim; i++){
+    if (ram[i][0] == 0){
+      ram[i][0] = gua;
+      return 0;
+    }
     if (ram[i][0] == gua){
       return 0;
     }
@@ -28,10 +39,14 @@ int guard_contained_in_ram(int** ram, int gua, int lim){
 
 void internal_set_cell_guard (int** ram, int gua, int* lim){
   int k = guard_contained_in_ram(ram, gua, *lim);
+  int lim_cur = *lim + 1;
   if (k == 0){
-    break;
-  } else
-    
+    return;
+  } else {
+    ram = (int**)  realloc(ram, lim_cur * sizeof(int*));
+    ram[lim_cur-1][0] = gua;
+    *lim = lim_cur;
+  }
   return;
 }
 
@@ -69,8 +84,6 @@ void pdm (int** memory, int lim){
   return;
 }
 
-
-
 void f_ret (int* ret, int* gua){
   printf("Guard %d returned %d\n", *gua, *ret);
   return;
@@ -92,11 +105,13 @@ void sum (int* cell, int* ret){
 void f_hig (int** ram, int* gua, int* ret, int lim){
   int temp = 0;
   int temp_gua = 0;
+  
   for (int i=0; i < lim; i++){
     temp = *ret;
     temp_gua = *gua;
     sum(ram[i], ret);
-    if (*ret >= temp){
+    
+    if (*ret > temp){
       *gua = ram[i][0];
     } else {
       *ret = temp;
@@ -128,13 +143,23 @@ void phr (int* hig, int* ret){
   return;
 }
 
-void mic (int* cell, int* fal, int* wak){
+int find_guard(int** ram, int gua, int lim){
+  for(int i=0; i < lim; i++){
+    if (ram[i][0] == gua){
+      return i;
+    }
+  }
+  return 0;
+}
+void mic (int** ram, int* fal, int* wak, int gua, int lim){
+  int index = find_guard(ram, gua, lim);
+  int* cell = ram[index];
   if (*fal > *wak){
     return;
   }
   cell[*fal] += 1;
   *fal = *fal + 1;
-  mic(cell, fal, wak);
+  mic(ram, fal, wak, gua, lim);
   return;
 }
 
@@ -165,15 +190,24 @@ int main (int argc, char** argv) {
   int** ram = (int**) malloc(sizeof(int*) * LIM_MIN+1);
   initialize_ram(ram, lim);
   initialize_cell (ram[0]);
-  ret = 0;
-  sfa(&fal, 1);
-  swa(&wak, 50);
-  sga(&gua, 2);
-  internal_set_cell_guard(ram, gua, &lim);
-  mic(ram, &fal, &wak, &gua);
-  sga(&gua, 0);
-  f_hig(ram, &gua, &ret, lim);
-  f_ret(&ret, &gua);
+  ret = 0; gua = 0; fal = 0; wak = 0; hig = 0; cpr = 0; rdr = 0;
+
+  FILE* file;
+  file = fopen(argv[1], "r");
+  if (file == NULL){
+    printf("NULL FILE!\n");
+    exit(-1);
+  }
+
+  char buffer[8];
+  fread(&buffer, sizeof(buffer),1,file);
+  for (int i=0; i<8; i++){
+    printf("%x\n", buffer[i]);
+  }
+
+  FILE *write_ptr;
+  write_ptr = fopen("test.bin", "wb");
+  fwrite(buffer, sizeof(buffer),1, write_ptr);
   return 0;
 }
 
