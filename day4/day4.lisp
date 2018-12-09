@@ -130,6 +130,4 @@
   (with-open-file (fd name :direction :output)
     (mapcar #'(lambda (x) (format fd "~a~%" x))
 	    data)
-    (format fd "~a~%" (car (opcode-to-binary '((hig 0)))))
-    (format fd "~a~%" (car (opcode-to-binary '((sga 2753)))))
-    (format fd "~a~%" (car (opcode-to-binary '((pcm 2753)))))))
+    (format fd "~a~%" (car (opcode-to-binary '((hig 0)))))))
