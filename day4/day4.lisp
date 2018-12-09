@@ -45,6 +45,29 @@
 	(setf (gethash (+ temp begin) hash) 1)))
   hash)
       
+
+     
+(defun guard-total (id id-table)
+  (let ((res '()))
+    (maphash #'(lambda (c y)
+			     (push (list c y) res))
+	     id-table)
+    (format t "Guard ~a is ~a and highest minute is ~a~%" id (reduce #'+ res :key #'second)
+	    (first (sort res #'> :key #'second)))))
+	  
+(defun solve ()
+  (progn
+    (clrhash *ghash*)
+    (guard-parse (sort-data (get-file "input")) 0 0)
+    (maphash #'(lambda (c y)
+		 (guard-total c y)) *ghash*)))
+
+(defun enumerate (lst)
+  (let ((len (length lst)))
+    (mapcar #'list lst (alexandria:iota len))))
+
+(defparameter *opcodes* (enumerate '(sga sfa swa ret add sum hig cpg cpe cpl low hgn phr mic pdm pcm)))
+
 (defun guard-parse (data cur-guard offset)
   (cond
     ((null data))
@@ -63,18 +86,50 @@
     
     (t
      '())))
-     
-(defun guard-total (id id-table)
-  (let ((res '()))
-    (maphash #'(lambda (c y)
-			     (push (list c y) res))
-	     id-table)
-    (format t "Guard ~a is ~a and highest minute is ~a~%" id (reduce #'+ res :key #'second)
-	    (first (sort res #'> :key #'second)))))
-	  
-(defun solve ()
-  (progn
-    (clrhash *ghash*)
-    (guard-parse (sort-data (get-file "input")) 0 0)
-    (maphash #'(lambda (c y)
-		 (guard-total c y)) *ghash*)))
+
+(defun assemble-parse (data)
+  (cond
+    ((null data)
+     '())
+    ((string= "Guard" (action-id (car data)))
+     (cons (list 'sga (parse-integer (guard-id (car data))))
+	   (assemble-parse (cdr data))))
+    ((string= "falls" (action-id (car data)))
+     (cons (list 'sfa (parse-integer (minute (car data))))
+	   (assemble-parse (cdr data))))
+    ((string= "wakes" (action-id (car data)))
+     (cons (list 'swa (parse-integer (minute (car data))))
+	   (cons (list 'mic 0)
+		 (assemble-parse (cdr data)))))))
+
+(defun repeat-zero (n)
+  (if (<= n 1)
+      "0"
+  (concatenate 'string "0" (repeat-zero (- n 1)))))
+
+(defun decimal-to-binary (n bits)
+  (let ((intermediate (format nil "~b" n)))
+    (if (> (length intermediate) bits)
+	(error "Buffer overflow in assembly")
+	(if
+	 (< (length intermediate) bits)
+	 (concatenate 'string (repeat-zero (- bits (length intermediate))) intermediate)
+	 intermediate))))
+
+(defparameter *test* (assemble-parse (get-file "input-sorted")))
+
+(defun opcode-to-binary (data)
+  (mapcar #'(lambda (x)
+	      (concatenate 'string
+			   (decimal-to-binary (cadr (assoc (car x) *opcodes*)) 8)
+			   " "
+			   (decimal-to-binary (cadr x) 16)))
+	  data))
+
+(defun output-binary-file (data name)
+  (with-open-file (fd name :direction :output)
+    (mapcar #'(lambda (x) (format fd "~a~%" x))
+	    data)
+    (format fd "~a~%" (car (opcode-to-binary '((hig 0)))))
+    (format fd "~a~%" (car (opcode-to-binary '((sga 2753)))))
+    (format fd "~a~%" (car (opcode-to-binary '((pcm 2753)))))))

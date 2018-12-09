@@ -9,7 +9,9 @@
 #include <time.h>
 #define LIM_MIN 64 
 #define MINUTES 61
-
+#define OPERAND_LEN 17
+// Defines how many bits we're using for our
+// operands
 enum opcodes {op_sga, op_sfa, op_swa, op_ret, op_add, op_sum
 	      , op_hig, op_cpg, op_cpe, op_cpl, op_low, op_hgn
 	      , op_phr, op_mic, op_pdm, op_pcm};
@@ -154,7 +156,7 @@ int find_guard(int** ram, int gua, int lim){
 void mic (int** ram, int* fal, int* wak, int gua, int lim){
   int index = find_guard(ram, gua, lim);
   int* cell = ram[index];
-  if (*fal > *wak){
+  if (*fal >= *wak){
     return;
   }
   cell[*fal] += 1;
@@ -163,6 +165,17 @@ void mic (int** ram, int* fal, int* wak, int gua, int lim){
   return;
 }
 
+int find_highest_minute(int* cell){
+  int temp = 0;
+  int res = 0;
+  for (int i=1; i < MINUTES; i++){
+    if (*(cell+i) >= temp){
+      temp = *(cell+i);
+      res = i;
+    }
+  }
+  return res;
+}
 
 void initialize_cell (int* cell){
   for (int i=0; i < MINUTES; i++){
@@ -178,6 +191,22 @@ void initialize_ram(int** ram, int lim){
   }
   return;
 }
+
+int binary_to_int (char * s){
+  return (int) strtol(s, NULL, 2);
+}
+
+int return_opcode (FILE* file){
+  char buffer[9];
+  fgets(&buffer[0], 9, file);
+  return binary_to_int(&buffer[0]);
+}
+int return_operand (FILE* file){
+  char buffer[OPERAND_LEN];
+  fgets(&buffer[0], OPERAND_LEN, file);
+  return binary_to_int(&buffer[0]);
+}
+
 
 int main (int argc, char** argv) {
   if (argc != 2) {
@@ -199,17 +228,45 @@ int main (int argc, char** argv) {
     exit(-1);
   }
 
-  char buffer[8];
-  fread(&buffer, sizeof(buffer),1,file);
-  for (int i=0; i<8; i++){
-    printf("%x\n", buffer[i]);
+  for(;;){
+    
+    int op = return_opcode(file);
+    getc(file); // remove #\space
+    int operand = return_operand(file);
+    getc(file); //remove \n
+    switch (op) {
+    case op_sga :
+      if (operand == 0){
+	return 1;
+      } //fix this later
+      sga(&gua, operand);
+      break;
+      
+    case op_sfa :
+      sfa(&fal, operand);
+      break;
+      
+    case op_swa :
+      swa(&wak, operand);
+      break;
+      
+    case op_pcm :
+      print_cell(ram[find_guard(ram, gua, lim)]);
+      break;
+      
+    case op_mic :
+      internal_set_cell_guard(ram, gua, &lim);
+      mic(ram, &fal, &wak, gua, lim);
+      break;
+      
+    case op_hig :
+      gua = 0; ret = 0;
+      f_hig (ram, &gua, &ret, lim);
+      int highest_minute = find_highest_minute(ram[find_guard(ram, gua, lim)]);
+      printf("highest guard: %d with sum asleep %d\nhighest minute: %d with answer %d", 
+	     gua, ret, highest_minute, highest_minute * gua);
+      break;
+    }
   }
-
-  FILE *write_ptr;
-  write_ptr = fopen("test.bin", "wb");
-  fwrite(buffer, sizeof(buffer),1, write_ptr);
   return 0;
 }
-
-  
-  
