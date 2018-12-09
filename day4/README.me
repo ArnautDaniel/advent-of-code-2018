@@ -3,3 +3,21 @@ SlepVM writeup incoming.
 Basic assembler written in Lisp. 
 
 SlepVM written in C.  Need to spend more time adding more instructions and fixing overt cases where the instruction is doing  more than it really should for a "low level" operation.
+
+To be fully low level (What I can think of in this moment):
+
+  `Hig` should be an instruction macro that exists in the assembler and not the VM.
+  Something like: 1.  sets all registers gua, fal, and wak to 0
+  2. sum (should also be rewritten lower level) the value and use `cpg`.  If greater than place the values in the registers `gua` `fal` and `wak`.
+  
+  Should probably remove the binary_to_decimal crutch and stick with binary represenation only.  This will bring up issues like endianess and such.  Use bitwise operations to compare, add, and multiply.
+  
+  The assembler should support macros.  
+  The assembler should make simple optimizations.
+  The opcode's can be 4bits (since only 15 or less instructions) instead of 8bits, turning the operands into 20bits long.  But since we might as well make each instruction a 32bit operation that brings us up to 28bits per operand.
+  Test out making a jump-table instead of a switch-case statement.
+  Remove as many C headers as possible.
+  Comment code.
+  Rewrite assembler in guile, as a script that can go in /usr/bin (or other location)
+  Lose all sanity and figure out how to implement a tiny forth -> zz-code language
+  
